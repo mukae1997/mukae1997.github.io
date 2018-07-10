@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Seasons Island</title>
+		<style>
+			body { 
+                margin: 0;
+                width:100%;
+                height:100%; 
+            
+            }
+			canvas { width: 100%; height: 100% }
+            #waitinghint{
+                position: fixed;
+                width:100%;
+                height:100%;
+                margin: 0;
+                padding:0;
+                
+            }
+            #container{    
+                margin-top:300px;
+                margin-left:30%;
+                
+                height:100px; 
+                width:500px;
+                
+            }
+            
+            .unloaded{
+                background-color: darkslategrey;
+                color:ghostwhite;
+                font-size: 10px;
+                opacity: 0.8;
+                
+            }
+            
+            .loaded{
+                opacity: 0;
+                display: none;
+            }
+            
+            #stats-container{
+                position: relative;
+                left:100px;
+            }
+            h2 {
+                position: absolute;
+                left:20px;
+            }
+            h2 a {
+                text-decoration: none;
+                color:white;
+                cursor: pointer;
+                padding:8px;
+                opacity: 0.8;
+                
+                background-color:darkslategrey;
+                
+            }
+            h2 a:visited {
+                text-decoration: none;
+                color:white;
+                
+            }
+            
+		</style>
+	</head>
+	<body>
+        <h2 style="z-index:2;"><a href="/" > < </a></h2>
+        <div id="stats-container"></div>
+        <div id="waitinghint" class = "unloaded">
+            <div id="container">
+                <h1 >
+                 Seasons Island
+                </h1>
+                <div>
+                    
+                Object Loading... <span id="progress">0</span>% / 100%
+
+                </div>
+                <div>
+                    已等待 <span id="wait">0</span>秒
+                </div>
+            </div>
+            
+            
+        
+        </div>
+        <script id="vertexShader" type="x-shader/x-vertex">
+            varying vec2 vUv;
+            varying vec4 worldPos;
+            varying vec3 vNormal;
+            uniform mat4 transform;
+			uniform mat4 textureMatrix; 
+            varying vec4 mirrorCoord;
+            uniform vec3 ilightPos;
+            
+            
+			void main() { 
+				 vUv = uv; 
+                 vNormal = normalize(normalMatrix * normal);
+				 gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+                 
+                 worldPos =  modelMatrix * vec4(position.xyz, 1.0);
+                 mirrorCoord =  textureMatrix * modelMatrix * vec4(position, 1.0);
+			}
+
+        </script>
+        
+        
+		<script id="fragmentShader" type="x-shader/x-vertex"> 
+        
+            varying vec2 vUv;
+            uniform sampler2D mirrorSampler;
+            uniform sampler2D normalSampler;
+
+            uniform sampler2D theTexture;
+            uniform mat4 transform;
+
+            varying vec4 worldPos;
+            varying vec3 vNormal; 
+            uniform vec3 viewPos;
+            uniform float iState;
+            uniform vec3 ilightPos;
+
+            varying vec4 mirrorCoord;
+
+            mat3 tangentTransform(vec3 vViewPosition) {
+
+                // normal mapping
+
+                vec4 posAndU = vec4( -vViewPosition, vUv.x );
+                // tangent is alongside the u-axis(x-axis, horizontal one.)
+                vec4 posAndU_dx = dFdx( posAndU ),  posAndU_dy = dFdy( posAndU );
+                vec3 tangent = posAndU_dx.w * posAndU_dx.xyz + posAndU_dy.w * posAndU_dy.xyz;
+                vec3 normal = normalize( vNormal );
+                vec3 binormal = normalize( cross( tangent, normal ) );
+                tangent = cross( normal, binormal );	// no normalization required
+                mat3 tsb = mat3( tangent, binormal, normal );
+                return tsb;
+            }
+
+            void main()	{
+                float PI = 3.14159;
+                float dayState = min(iState, 1.0);
+                // gl_FragCoord.x  屏幕坐标
+                // gl_FragColor = vec4(vUv.x, vUv.y,1,1);
+
+                vec3 lightPos = vec3(-650.0,38.0,300.0); // fake light
+    //            lightPos = ilightPos;
+
+
+                float ambientStrength = 0.7;
+                vec3 lightColor = vec3(0.6,0.8,0.86); // fake
+                vec3 myblue = vec3(140.0 / 255.0, 214.0 / 255.0, 255.0 / 255.0);
+                vec3 myorange = vec3(255.0 / 255.0, 157.0 / 255.0, 30.0 / 255.0);
+                vec3 black = vec3(0.0,0.0,0.0);
+                if (iState < 1.0) {
+                    lightColor = mix(myblue, myorange, iState) ;
+                } else if (iState >= 1.0 && iState < 1.5){
+                    lightColor = mix(myorange, black, (iState-1.0)/0.5) ;
+                } else {
+                    lightColor = mix(black, myblue, (iState-1.5)/0.5) ;
+                }
+
+                float darkstate = -1.0;
+                if (iState > 1.0) darkstate = iState - 1.0;
+
+                // NOTICE!!!: THIS SHADER calculating lighting in WORLD space
+                vec3 ambient = ambientStrength * lightColor - darkstate; 
+
+                // diffuse lighting
+                vec3 norm = normalize(vNormal);
+                // tagent space transform
+                vec3 viewDir = (viewPos - vec3(worldPos));
+                mat3 tsb = tangentTransform( viewDir );
+                viewDir = normalize(viewDir);
+
+                norm =   (texture2D(theTexture, vUv).xyz ); // wrong but good effect
+                norm =    2.0*(texture2D(normalSampler, vUv).xyz )-1.0;
+
+                norm = normalize(tsb * norm);
+                norm.rgb = norm.rbg;
+
+
+                vec3 lightDir = normalize(lightPos - vec3(worldPos)); // point light
+
+                vec3 dirlightpos = vec3(-200.0*cos(iState * 3.13159),10.0*sin(dayState*PI) ,0.0);
+                lightDir = normalize(-dirlightpos); // directional light
+
+                float diff = max(dot(norm, lightDir), 0.0);
+                vec3 diffuse = diff * lightColor;
+
+                // specular lighting 
+
+                float specularStrength = 0.8;
+                if (darkstate > 0.0 ) specularStrength *= max(0.0, darkstate);
+                vec3 inlight = -lightDir;
+                vec3 reflectDir = reflect(inlight, norm);
+                float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+                vec3 specular = specularStrength * spec * lightColor;   
+                vec4 texColor = texture2D(theTexture, vUv);
+                vec4 result = vec4(ambient*0.3 + diffuse + specular*2.0, 1.0) * texColor;
+
+
+                vec4 env = texture2DProj(mirrorSampler, mirrorCoord);
+
+                float e = 0.66;
+                vec3 refractDir = refract(inlight, norm, e);
+                float power = 5.0;
+                float bias = 0.2;
+                float scale = 0.5;
+                float fresnel = bias + scale * pow(min(0.0, 1.0 - dot(inlight, norm)), 
+                                                    power);
+
+                //vec3 reflectColor = vec3(mirrorCoord.y, mirrorCoord.x, 1.0);
+                vec3 reflectColor = env.rgb;  
+                //vec3 reflectColor = vec3(0.5,1.0,1.0);  
+
+                float latterRatio = 0.51; 
+                float reflectEffectByLight = -1.0;
+                reflectEffectByLight = abs(dayState - 0.5); // 太阳靠近边缘的时候反射更强
+                 
+                gl_FragColor = vec4(mix(result.rgb, reflectColor, 0.4 + reflectEffectByLight),1.0);
+//                 gl_FragColor.rgb = worldPos.rgb / 700.0;
+//                gl_FragColor.rgb = norm.xyz;
+    //            if (distance(vec3(worldPos).x, dirlightpos.x) < 1.0) {gl_FragColor.rgb = vec3(0.0,1.0,0.0);}
+    //            if (distance(vec3(worldPos).z, dirlightpos.y) < 1.0) {gl_FragColor.rgb = vec3(0.0,0.0,1.0);}
+            }
+        </script>
+		<script src="js/three.js"></script>
+		<script src="js/ImprovedNoise.js"></script>
+		<script src="js/dat.gui.min.js"></script>
+		<script src="js/ThreeCSG.js"></script>
+		<script src="js/libs/stats.min.js"></script>
+        
+		<script src="js/libs/ammo.js"></script>
+        
+		<script src="js/postprocessing/EffectComposer.js"></script>
+		<script src="js/postprocessing/RenderPass.js"></script>
+		<script src="js/postprocessing/ShaderPass.js"></script>
+		<script src="js/postprocessing/MaskPass.js"></script>
+        
+		<script src="js/shaders/CopyShader.js"></script>
+		<script src="js/shaders/DotScreenShader.js"></script>
+        
+		<script src="js/shaders/FXAAShader.js"></script>
+		<script src="js/shaders/ConvolutionShader.js"></script>
+<!--		<script src="js/shaders/RGBShiftShader.js"></script>-->
+        <script src="js/shaders/LuminosityHighPassShader.js"></script>
+		<script src="js/postprocessing/UnrealBloomPass.js"></script>
+        
+        <script src="js/controls/FirstPersonControls.js"></script>
+        <script src="js/controls/OrbitControls.js"></script>
+        <script src="js/loaders/OBJLoader.js"></script>
+        <script src="js/loaders/MTLLoader.js"></script>
+        <script src="spring.js"> </script>   
+        <script src="sea.js"> </script>   
+        <script src="https://threejs.org/examples/js/renderers/CanvasRenderer.js"></script>
+		<script src="winter.js" > </script>
+        <script src="Fall.js" > </script>
+        <script src="summer.js"></script>
+		<script src="myscene.js">		
+		</script>    
+	</body>
+</html> 
