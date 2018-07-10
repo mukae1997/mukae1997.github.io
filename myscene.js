@@ -58,7 +58,7 @@ var waitingStart = 0;
 var toggleControl = !true;
 var visualizexcy = false;
 ///////////////////////////////////
- 
+waitingStart = clock.getElapsedTime();
 init();
 addControls();
 //setTestHelper();
@@ -80,12 +80,18 @@ function update(){
     
     if (!visualizexcy) {
         
+        if (winter) {
+            winter.update();
         winter.group.visible = true;
+        }
+        if (fall){
+            fall.update();
         fall.group.visible = true;
+        } 
+        if (summer){
         summer.group.visible = true;
-        if (winter) winter.update();
-        if (fall) fall.update();
-        if (summer) summer.update();
+            summer.update();
+        } 
         
     } else {
         // only visualize part of xcy
@@ -124,7 +130,7 @@ function update(){
 
     updatePhysics( deltaTime );
     
-    var TARGET = 7;
+    var TARGET = 2;
     
     if (dt.getTime() % 10 == 0 && !flag) {
         console.log(THREE.TotalModelNumber);
@@ -172,9 +178,9 @@ function addObjs() {
     
     
    addSpringObjs();
-   addSummerObjs(); 
-   addFallObjs(); 
-   addWinterObjs();
+//   addSummerObjs(); 
+//   addFallObjs(); 
+//   addWinterObjs();
     
     
 //    
@@ -622,7 +628,7 @@ function init() {
 //    // scene.add(new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.61 ));
 //    scene.add(new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.61 ));
     
-    waitingStart  = clock.getElapsedTime();
+//    waitingStart  = clock.getElapsedTime();
     
     
 //    var ambl = new THREE.AmbientLight( 0x404040, 0.3 ); // soft white light
