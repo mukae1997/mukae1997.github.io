@@ -682,7 +682,7 @@ function initGui() {
         this.xcy = false;
     };
     var ctrlController = gui.add(controls, 'useFirstPersonControl');
-    var xcyController = gui.add(controls, 'spring');
+//    var xcyController = gui.add(controls, 'spring');
     
     
     ctrlController.onFinishChange(function(value) {
