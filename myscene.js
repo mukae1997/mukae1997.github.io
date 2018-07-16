@@ -138,7 +138,7 @@ function update(){
         console.log(THREE.TotalModelNumber);
         document.querySelector("#progress").textContent = THREE.TotalModelNumber*1.0 / TARGET * 100;
         var haveWaitedFor = clock.getElapsedTime() - waitingStart;
-        console.log("haveWaitedFor = ", haveWaitedFor);
+//        console.log("haveWaitedFor = ", haveWaitedFor);
         document.querySelector("#wait").textContent = haveWaitedFor;
         
         if (THREE.TotalModelNumber >= TARGET) {
