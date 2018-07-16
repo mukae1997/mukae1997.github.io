@@ -58,7 +58,9 @@ var waitingStart = 0;
 var toggleControl = !true;
 var visualizexcy = false;
 ///////////////////////////////////
+
 waitingStart = clock.getElapsedTime();
+
 init();
 addControls();
 //setTestHelper();
