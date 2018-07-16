@@ -130,7 +130,7 @@ function update(){
 
     updatePhysics( deltaTime );
     
-    var TARGET = 2;
+    var TARGET = 7;
     
     if (dt.getTime() % 10 == 0 && !flag) {
         console.log(THREE.TotalModelNumber);
@@ -178,9 +178,9 @@ function addObjs() {
     
     
    addSpringObjs();
-//   addSummerObjs(); 
-//   addFallObjs(); 
-//   addWinterObjs();
+   addSummerObjs(); 
+   addFallObjs(); 
+   addWinterObjs();
     
     
 //    
@@ -680,7 +680,7 @@ function initGui() {
         this.xcy = false;
     };
     var ctrlController = gui.add(controls, 'useFirstPersonControl');
-    var xcyController = gui.add(controls, 'xcy');
+    var xcyController = gui.add(controls, 'spring');
     
     
     ctrlController.onFinishChange(function(value) {
