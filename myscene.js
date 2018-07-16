@@ -190,7 +190,7 @@ function addObjs() {
     
     
     addLighting();
-//    addText();
+    addText();
     addLensflare();
     addSky();
     
@@ -691,10 +691,10 @@ function initGui() {
     });
     
     
-    
-    xcyController.onFinishChange(function(value) {
-        visualizexcy = value;
-    });
+//    
+//    xcyController.onFinishChange(function(value) {
+//        visualizexcy = value;
+//    });
     
 }
 function setTestHelper()
