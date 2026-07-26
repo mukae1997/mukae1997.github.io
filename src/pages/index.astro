@@ -192,20 +192,20 @@ const publications = publicationData.slice(0, 3);
         })}
       </div>
 
-      <a class="archive-link" href="/projects">VIEW ALL PROJECTS <span>↗</span></a>
+      <a class="archive-link" href="/projects">View all projects <span>↗</span></a>
     </section>
 
     {publications.length > 0 && (
       <section class="publications" aria-labelledby="publication-title">
         <div class="section-label">
           <h2 id="publication-title">Research</h2>
-          <a href="/research">VIEW ALL ↗</a>
+          <a href="/research">View all ↗</a>
         </div>
         <div class="publication-list">
           {publications.map((publication) => (
             <a class="publication" href={publication.url} target="_blank" rel="noreferrer">
               <span>{publication.year}</span>
-              <span>{publication.title}</span>
+              <em class="publication-title">{publication.title}</em>
               <span>{publication.venue}</span>
             </a>
           ))}
@@ -213,11 +213,6 @@ const publications = publicationData.slice(0, 3);
       </section>
     )}
 
-    <footer class="site-footer">
-      <p>Available for selected collaborations.</p>
-      <a href="mailto:milkteaonthebeat@gmail.com">milkteaonthebeat@gmail.com</a>
-      <span>© 2026 XU CHUYAN</span>
-    </footer>
   </main>
 </BaseLayout>
 
@@ -241,13 +236,12 @@ const publications = publicationData.slice(0, 3);
   .section-label,
   .project-meta,
   .publication,
-  .site-footer,
   .eyebrow,
   .intro-note {
     font-size: 0.68rem;
     line-height: 1.3;
     letter-spacing: 0.04em;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   .site-nav {
@@ -262,8 +256,7 @@ const publications = publicationData.slice(0, 3);
   .wordmark,
   .nav-links a,
   .archive-link,
-  .publication,
-  .site-footer a {
+  .publication {
     color: #101010;
     text-decoration: none;
   }
@@ -271,7 +264,7 @@ const publications = publicationData.slice(0, 3);
   .wordmark { font-weight: 700; }
 
   .nav-links { display: flex; gap: 20px; }
-  .nav-links a:hover, .wordmark:hover, .site-footer a:hover { opacity: 0.45; }
+  .nav-links a:hover, .wordmark:hover { opacity: 0.45; }
 
   .intro {
     min-height: min(72vh, 760px);
@@ -378,14 +371,7 @@ const publications = publicationData.slice(0, 3);
     text-transform: none;
   }
   .publication:hover { opacity: .5; }
-
-  .site-footer {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 20px;
-    border-top: 1px solid #101010;
-    padding: 14px 0 28px;
-  }
+  .publication-title { font-style: italic; }
 
   @media (max-width: 720px) {
     .home-page { padding: 0 14px; }
@@ -398,7 +384,7 @@ const publications = publicationData.slice(0, 3);
     .project-meta span:last-child { grid-column: 2; }
     .media-1 { grid-column: span 12; height: 82vw; }
     .media-2, .media-3 { grid-column: span 6; height: 42vw; }
-    .publication, .site-footer { grid-template-columns: 1fr; gap: 7px; }
+    .publication { grid-template-columns: 1fr; gap: 7px; }
   }
 
   /* Nolan Barret-inspired full-page canvas layout */
@@ -566,7 +552,6 @@ const publications = publicationData.slice(0, 3);
   }
 
   .publications .section-label { display: flex; }
-  .site-footer { font-size: .62rem; }
 
   @media (max-width: 720px) {
     :global(body) { padding: 0 !important; }
