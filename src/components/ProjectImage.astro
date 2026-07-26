@@ -1,0 +1,54 @@
+---
+// 项目图片组件 - 使用此组件快速添加项目图片
+// 用法：<ProjectImage src="/images/projects/xxx/cover.jpg" alt="项目名称" />
+
+interface Props {
+  src: string;
+  alt: string;
+  loading?: 'lazy' | 'eager';
+}
+
+const { src, alt, loading = 'lazy' } = Astro.props;
+---
+
+<div class="project-image-wrapper">
+  <img 
+    src={src} 
+    alt={alt} 
+    loading={loading}
+    class="project-image"
+  />
+</div>
+
+<style>
+  .project-image-wrapper {
+    width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, var(--indigo-100), var(--indigo-200));
+  }
+
+  .project-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .project-image:hover {
+    transform: scale(1.05);
+  }
+
+  /* 图片加载失败时显示渐变背景 */
+  .project-image-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--indigo-100), var(--indigo-200));
+    z-index: -1;
+  }
+</style>

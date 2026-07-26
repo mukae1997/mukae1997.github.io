@@ -1,0 +1,78 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="About | Xu Chuyan" description="Creative technologist working across games, AI, and interactive experiences.">
+  <div class="container about-page">
+    <header class="about-hero">
+      <h1>About</h1>
+      <p class="lede">I’m a creative technologist working across games, AI, and interactive experiences. I build the systems behind ideas that need to be felt: real-time visuals, spatial interaction, playful worlds, and human–AI encounters.</p>
+    </header>
+
+    <div class="about-layout">
+      <aside class="about-meta" aria-label="Profile details">
+        <div><span>Based in</span><strong>Shanghai, China</strong></div>
+        <div><span>Focus</span><strong>Creative technology</strong></div>
+      </aside>
+
+      <main class="about-content">
+        <section>
+          <h2>Practice</h2>
+          <p>My work connects custom software, hardware, game engines, and visual systems. I work with Unity, real-time graphics, AI agents, sensors, and spatial interfaces to turn concepts into experiences people can enter, play with, and remember.</p>
+        </section>
+
+        <section>
+          <h2>Selected experience</h2>
+          <ul class="experience-list">
+            <li><span>2023–now</span><strong>Ada Eden</strong><em>Lead game programmer</em></li>
+            <li><span>2024–2025</span><strong>Agentland Lab, Tsinghua SIGS</strong><em>Engineer</em></li>
+            <li><span>2019–2024</span><strong>New Drama Studio</strong><em>Technical director</em></li>
+          </ul>
+        </section>
+
+        <section id="contact" class="contact-block">
+          <h2>Contact</h2>
+          <p>For collaborations, commissions, and conversations:</p>
+          <a href="mailto:milkteaonthebeat@gmail.com">milkteaonthebeat@gmail.com</a>
+        </section>
+      </main>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .about-page { max-width: 760px; margin: 0 12px; padding: 0 0 84px; }
+  .about-hero { min-height: 355px; max-width: 34ch; margin: 0; padding: 92px 0 16px; }
+  h1 { font-size: .72rem; font-weight: 600; line-height: var(--leading-label); letter-spacing: var(--tracking-label); }
+  .lede { margin-top: 14px; color: #101010; font-size: clamp(1.05rem, 1.38vw, 1.38rem); font-weight: 500; line-height: var(--leading-display); letter-spacing: var(--tracking-display); }
+  .about-layout { display: block; }
+  .about-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-bottom: 72px; font-size: .72rem; }
+  .about-meta div { display: flex; flex-direction: column; gap: 3px; }
+  .about-meta span, .experience-list span, .experience-list em { color: #777; font-style: normal; }
+  .about-meta strong, .experience-list strong { font-weight: 500; }
+  .about-content { max-width: 680px; }
+  .about-content section { margin: 0 0 52px; padding: 0; }
+  .about-content h2 { margin-bottom: 11px; font-size: .82rem; font-weight: 600; letter-spacing: var(--tracking-label); line-height: var(--leading-label); }
+  .about-content p {
+    color: #101010;
+    font-size: clamp(1.05rem, 1.38vw, 1.38rem);
+    font-weight: 500;
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+  }
+  .experience-list { display: flex; flex-direction: column; gap: 10px; list-style: none; }
+  .experience-list li { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 14px; font-size: .82rem; }
+  .contact-block { margin-bottom: 0 !important; }
+  .contact-block a { display: block; width: fit-content; margin-top: 9px; border-bottom: 1px solid #101010; font-size: .98rem; }
+  .contact-block a:hover { opacity: .55; }
+
+  @media (max-width: 720px) {
+    .about-page { padding-bottom: 56px; }
+    .about-hero { min-height: 260px; padding-top: 74px; }
+    .lede { font-size: 1.15rem; max-width: 26ch; }
+    .about-content p { font-size: 1.15rem; }
+    .about-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-bottom: 48px; }
+    .experience-list li { grid-template-columns: 74px minmax(0, 1fr); }
+    .experience-list em { grid-column: 2; }
+  }
+</style>
