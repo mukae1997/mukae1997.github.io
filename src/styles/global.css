@@ -66,7 +66,14 @@ img, video { display: block; max-width: 100%; }
   font-weight: 650;
   letter-spacing: var(--tracking-label);
 }
-.global-context { justify-self: center; color: var(--muted); }
+.global-context {
+  justify-self: center;
+  position: relative;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: var(--tracking-label);
+  line-height: var(--leading-label);
+}
 .global-links { justify-self: end; display: flex; align-items: center; gap: clamp(18px, 2.4vw, 32px); }
 .global-links .lang-toggle {
   position: static !important;
@@ -83,13 +90,13 @@ img, video { display: block; max-width: 100%; }
   font-weight: 400;
   line-height: inherit;
 }
-.global-links a, .global-links .lang-btn, .global-wordmark, .back-link {
+.global-links a, .global-links .lang-btn, .global-wordmark, .global-context, .back-link {
   position: relative;
   text-transform: none;
   letter-spacing: var(--tracking-label);
   line-height: var(--leading-label);
 }
-.global-links a::after, .global-links .lang-btn::after, .global-wordmark::after, .back-link::after,
+.global-links a::after, .global-links .lang-btn::after, .global-wordmark::after, .global-context::after, .back-link::after,
 .wordmark::after, .nav-links a::after {
   content: '';
   position: absolute;
@@ -102,7 +109,7 @@ img, video { display: block; max-width: 100%; }
   transform-origin: left;
   transition: transform 220ms ease;
 }
-.global-links a:hover::after, .global-links .lang-btn:hover::after, .global-links .lang-btn.active::after, .global-wordmark:hover::after, .back-link:hover::after,
+.global-links a:hover::after, .global-links .lang-btn:hover::after, .global-links .lang-btn.active::after, .global-wordmark:hover::after, .global-context:hover::after, .back-link:hover::after,
 .wordmark:hover::after, .nav-links a:hover::after { transform: scaleX(1); }
 
 /* Remove the earlier decorative themes in favour of the shared portfolio canvas. */
