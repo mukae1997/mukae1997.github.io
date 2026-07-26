@@ -116,7 +116,7 @@ function getProjectMedia(project: Record<string, string>) {
       return {
         type: isVideo ? 'video' : 'image',
         // Keep deployment updates from reusing a browser-cached missing asset.
-        src: `/images/projects/${slug}/${encodeURIComponent(file)}?v=20260726-2`,
+        src: `/images/projects/${slug}/${encodeURIComponent(file)}?v=20260726-3`,
         ratio: Math.max(0.4, Math.min(2.5, ratio)).toFixed(3),
         shape: getMediaShape(ratio),
       };

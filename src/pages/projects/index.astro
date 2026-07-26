@@ -151,7 +151,7 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
           const domains = project['Domain']?.split(',').map((item) => item.trim()).filter(Boolean) || [];
           const cover = project['Cover'] || 'cover.png';
           const coverPath = `/images/projects/${slug}/${encodeURIComponent(cover)}`;
-          const coverUrl = `${coverPath}?v=20260726-2`;
+          const coverUrl = `${coverPath}?v=20260726-3`;
           const hasCover = existsSync(resolve('./public', coverPath.slice(1)));
 
           return (
