@@ -19,7 +19,7 @@ This portfolio uses one visual system across the home page, About page, project 
 
 ## Components
 
-- Navigation: `Xu Chuyan`, context line, then `About`. Use the same small-label style and a short hover underline.
+- Navigation: `Xu Chuyan`, `Projects`, then `About`. Use the same small-label style and a short hover underline on every link.
 - Tags: rectangular black outline, no pill radius.
 - Project cards: media and metadata may be shown, but cards do not link to their detail pages until the details are ready.
 - Project grouping: use only Notion's `Portfolio Category` field, synchronized into `projects-master.csv`. The public labels are `Exhibitions, Art & Performances`, `Game`, and `AIGC`; do not infer categories from other fields or hard-code per-project mappings in the page.
