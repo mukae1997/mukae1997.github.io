@@ -159,7 +159,7 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
               <span class="project-num">{(index + 1).toString().padStart(2, '0')}</span>
               <div class="project-image-inline">
                 {hasCover ? (
-                  <img src={coverUrl} alt={name} loading="lazy" />
+                  <img src={coverUrl} alt={name} />
                 ) : (
                   <span class="project-image-placeholder">{nameEn}</span>
                 )}
