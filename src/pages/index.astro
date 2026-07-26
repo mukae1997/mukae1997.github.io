@@ -115,7 +115,8 @@ function getProjectMedia(project: Record<string, string>) {
       const ratio = squareIndexes.has(index) ? 1 : sourceRatio;
       return {
         type: isVideo ? 'video' : 'image',
-        src: `/images/projects/${slug}/${encodeURIComponent(file)}`,
+        // Keep deployment updates from reusing a browser-cached missing asset.
+        src: `/images/projects/${slug}/${encodeURIComponent(file)}?v=20260726-2`,
         ratio: Math.max(0.4, Math.min(2.5, ratio)).toFixed(3),
         shape: getMediaShape(ratio),
       };
