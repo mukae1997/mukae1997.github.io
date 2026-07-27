@@ -248,6 +248,14 @@ img, video { display: block; max-width: 100%; }
 .site-page .project-name-en { line-height: var(--leading-label); }
 .site-page .project-tech, .site-page .project-year, .site-page .project-name-cn { color: var(--muted) !important; font-size: .72rem !important; }
 
+/* Keep the compact project index deterministic: old page styles must not
+   reflow the title into the collapsed image column. */
+.site-page .project-num { grid-column: 1 !important; }
+.site-page .project-image-inline { grid-column: 2 !important; }
+.site-page .project-name { grid-column: 3 !important; }
+.site-page .project-tech { grid-column: 4 !important; }
+.site-page .project-year { grid-column: 5 !important; }
+
 /* Project index: compact by default; a row expands only for image preview. */
 .site-page .project-row {
   grid-template-columns: 38px 0 minmax(160px, 1.2fr) minmax(140px, .8fr) 65px !important;
@@ -363,5 +371,8 @@ img, video { display: block; max-width: 100%; }
   .site-page .manifest-item:last-child { align-items: start; text-align: left !important; }
   .site-page .project-row { grid-template-columns: 28px 1fr 52px !important; gap: 10px !important; }
   .site-page .project-image-inline, .site-page .project-tech { display: none !important; }
+  .site-page .project-num { grid-column: 1 !important; }
+  .site-page .project-name { grid-column: 2 !important; }
+  .site-page .project-year { grid-column: 3 !important; }
   .site-page .contact-grid { grid-template-columns: 1fr !important; gap: 26px !important; }
 }
