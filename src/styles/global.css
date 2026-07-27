@@ -112,6 +112,31 @@ img, video { display: block; max-width: 100%; }
 .global-links a:hover::after, .global-links .lang-btn:hover::after, .global-links .lang-btn.active::after, .global-wordmark:hover::after, .global-context:hover::after, .back-link:hover::after,
 .wordmark:hover::after, .nav-links a:hover::after { transform: scaleX(1); }
 
+/* Motion stays restrained: it introduces hierarchy without competing with the work. */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-enabled .motion-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  .motion-enabled .motion-reveal.is-visible {
+    animation: reveal-up 620ms cubic-bezier(.22, .8, .22, 1) var(--reveal-delay, 0ms) both;
+  }
+
+  @keyframes reveal-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .site-page .project-row:hover .project-image-inline img {
+    transform: scale(1.045);
+  }
+
+  .site-page .project-image-inline img {
+    transition: transform 460ms cubic-bezier(.2, .8, .2, 1);
+  }
+}
+
 /* Remove the earlier decorative themes in favour of the shared portfolio canvas. */
 .site-page .mesh-background,
 .site-page .sticker-badge,

@@ -531,6 +531,21 @@ const publications = publicationData.slice(0, 3);
   .project-gallery:hover img,
   .project-gallery:hover video { transform: scale(1.015); }
 
+  @media (prefers-reduced-motion: no-preference) {
+    .project-media {
+      transition: transform 450ms cubic-bezier(.22, .8, .22, 1), filter 450ms ease;
+    }
+
+    .project-gallery:hover .project-media {
+      transform: translateY(-3px);
+      filter: saturate(1.04);
+    }
+
+    .project-gallery:hover .project-media:nth-child(even) {
+      transform: translateY(3px);
+    }
+  }
+
   .project-media:only-child { grid-column: span 12; }
   .project-media:first-child:nth-last-child(2),
   .project-media:nth-child(2):last-child { grid-column: span 6; }

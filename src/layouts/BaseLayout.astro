@@ -26,6 +26,12 @@ const {
 
   <title>{title}</title>
 
+  <script is:inline>
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('motion-enabled');
+    }
+  </script>
+
   <style>
     :root {
       --black: #101010;
@@ -106,5 +112,27 @@ const {
     </main>
   )}
 
+  <script is:inline>
+    const revealTargets = document.querySelectorAll(
+      '.intro, .project-feature, .publications, .page-hero, .project-group, .about-intro-section, .experience-section, .contact-section, .research-section'
+    );
+
+    if (document.documentElement.classList.contains('motion-enabled') && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+
+      revealTargets.forEach((target, index) => {
+        target.classList.add('motion-reveal');
+        target.style.setProperty('--reveal-delay', `${Math.min(index * 45, 180)}ms`);
+        observer.observe(target);
+      });
+    }
+  </script>
 </body>
 </html>
