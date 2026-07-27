@@ -90,25 +90,25 @@ const englishProjectNames: Record<string, string> = {
   '1001-nights': '1001 Nights (Commercial)',
 };
 
-const projectTaglines: Record<string, string> = {
-  '1001-nights': 'AI-native narrative adventure',
-  'echuu': 'AI VTuber streaming platform',
-  'xixi': 'Voice-driven AI companion',
-  'hyborg-agency': 'Social experiments with AI agents',
+const projectFeaturing: Record<string, string> = {
+  '1001-nights': 'LLM-driven narrative content pipeline',
+  'echuu': 'AI character streaming experience',
+  'xixi': 'Voice-to-character interaction flow',
+  'hyborg-agency': 'Multi-agent worldbuilding framework',
   'ai-nushu': 'Interactive AI revival of Nüshu',
-  'ai-map': 'Mapping artificial intelligence through interaction',
-  'vr-diving': 'An immersive virtual dive beneath the sea',
-  'vj-project': 'Live visuals for The Either tour',
-  'journey-immortals': 'An interactive Chinese mythology journey',
-  'parallel': 'An audiovisual performance on parallel worlds',
-  'humans-space-time': 'An immersive exhibition about people and time',
-  'dance-shadows': 'A motion-driven fashion experience',
-  'autumn-wind-nanyuan': 'A digital performance inspired by autumn',
-  'quancheng-memory': 'An interactive memory of Jinan',
-  'music-realm': 'An immersive musical world',
-  'mother-gyro': 'An interactive kinetic sculpture',
-  'swords-west-river': 'A spatial West River Sword Dance',
-  'tianmu-dream': 'A dreamlike digital Mount Tianmu landscape',
+  'ai-map': 'Interactive AI knowledge visualization',
+  'vr-diving': 'Immersive spatial interaction environment',
+  'vj-project': 'Real-time generative visual engine',
+  'journey-immortals': 'Location-based interaction environment',
+  'parallel': 'Audiovisual worldbuilding performance',
+  'humans-space-time': 'Immersive exhibition interaction system',
+  'dance-shadows': 'Motion-responsive visual choreography',
+  'autumn-wind-nanyuan': 'Real-time performance visual system',
+  'quancheng-memory': 'Interactive city-memory experience',
+  'music-realm': 'Immersive musical interaction world',
+  'mother-gyro': 'Kinetic sculpture interaction system',
+  'swords-west-river': 'Spatial performance interaction system',
+  'tianmu-dream': 'Generative mythic landscape experience',
 };
 
 const portfolioGroups = [
@@ -138,6 +138,13 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
 
     <!-- Projects List -->
     <section class="projects-list-section">
+      <div class="project-list-columns data-text" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span>Featuring</span>
+        <span>Year</span>
+      </div>
       {projectGroups.map(({ value, label, projects }) => (
         <section class="project-group" aria-labelledby={`group-${value.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`}>
           <h2 id={`group-${value.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`} class="project-group-title">{label}</h2>
@@ -147,8 +154,9 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
           const name = project['Project Name'];
           const slug = project['slug'];
           const nameEn = project['Project Name EN'] || englishProjectNames[slug] || name;
-          const tagline = projectTaglines[slug] || 'Interactive experience';
+          const featuring = projectFeaturing[slug] || 'Interactive experience';
           const domains = project['Domain']?.split(',').map((item) => item.trim()).filter(Boolean) || [];
+          const domainText = domains.join(' / ');
           const cover = project['Cover'] || 'cover.png';
           const coverPath = `/images/projects/${slug}/${encodeURIComponent(cover)}`;
           const coverUrl = `${coverPath}?v=20260726-3`;
@@ -166,9 +174,9 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
               </div>
               <span class="project-name">
                 <span class="project-name-en">{nameEn}</span>
-                <span class="project-name-cn">{tagline}</span>
+                {domainText && <span class="project-name-domain">{domainText}</span>}
               </span>
-              <span class="project-tech">{domains.join(' / ')}</span>
+              <span class="project-featuring">{featuring}</span>
               <span class="project-year">({year})</span>
             </div>
           );
