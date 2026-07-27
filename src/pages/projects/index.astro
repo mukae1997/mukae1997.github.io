@@ -132,22 +132,18 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
   <div class="container">
 
     <!-- Page Title -->
-    <section class="page-hero">
+    <section class="page-hero projects-hero">
       <h1 class="display-text page-title" data-en="Projects" data-cn="项目作品">Projects</h1>
     </section>
 
     <!-- Projects List -->
     <section class="projects-list-section">
-      <div class="project-list-columns data-text" aria-hidden="true">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span>Featuring</span>
-        <span>Year</span>
-      </div>
       {projectGroups.map(({ value, label, projects }) => (
         <section class="project-group" aria-labelledby={`group-${value.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`}>
-          <h2 id={`group-${value.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`} class="project-group-title">{label}</h2>
+          <div class="project-group-heading">
+            <h2 id={`group-${value.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`} class="project-group-title">{label}</h2>
+            <span class="project-group-feature-label" aria-hidden="true">Featuring</span>
+          </div>
           <div class="projects-list">
         {projects.map((project, index) => {
           const year = project['year'];
