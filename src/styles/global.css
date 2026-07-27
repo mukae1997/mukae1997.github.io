@@ -235,7 +235,16 @@ img, video { display: block; max-width: 100%; }
 .site-page .project-image-inline { width: 108px; height: 68px; overflow: hidden; }
 .site-page .project-image-inline img { width: 100%; height: 100%; object-fit: cover; border-radius: 0 !important; }
 .site-page .project-name, .site-page .project-tech, .site-page .project-year { color: var(--ink) !important; text-transform: none !important; letter-spacing: -.02em !important; }
-.site-page .project-name { display: flex; flex-direction: column; gap: 3px; font-size: .88rem !important; font-weight: 600 !important; }
+.site-page .project-name {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-size: .88rem !important;
+  font-weight: 600 !important;
+}
 .site-page .project-name-en { line-height: var(--leading-label); }
 .site-page .project-tech, .site-page .project-year, .site-page .project-name-cn { color: var(--muted) !important; font-size: .72rem !important; }
 
