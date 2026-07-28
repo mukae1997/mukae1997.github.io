@@ -1,310 +1,187 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
-interface Project {
-  slug: string;
-  projectName: string;
-  projectNameEN: string;
-  display: string;
-  featured: string;
-  year: string;
-  projectType: string;
-  category: string;
-  domain: string;
-  coreEngine: string;
-  hardwareSensors: string;
-  programmingLanguages: string;
-  artistCollaborator: string;
-  role: string;
-  roleCN: string;
-  timeline: string;
-  company: string;
-  overview: string;
-  overviewCN: string;
-  achievements: string;
-  techDetails: string;
-  technologies: string;
-  exhibition: string;
-  publication: string;
-  cover: string;
-}
-
-// Parse CSV with proper quote handling
-function parseMasterCSV(csvText: string): Record<string, Record<string, string>> {
-  const lines = csvText.trim().split('\n');
-  if (lines.length < 2) return {};
-
-  const headers = headersFromLine(lines[0]);
-  const projects: Record<string, Record<string, string>> = {};
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.trim()) continue;
-
-    const values = parseCSVLine(line);
-    if (values.length < headers.length) continue;
-
-    const project: Record<string, string> = {};
-    headers.forEach((header, index) => {
-      project[header] = values[index] || '';
-    });
-
-    if (project.slug) {
-      projects[project.slug] = project;
-    }
-  }
-
-  return projects;
-}
-
-function normalizeProject(raw: Record<string, string>): Project {
-  return {
-    slug: raw['slug'] || '',
-    projectName: raw['Project Name'] || '',
-    projectNameEN: raw['Project Name EN'] || raw['Project Name'] || '',
-    display: raw['Display'] || '',
-    featured: raw['Featured'] || '',
-    year: raw['year'] || '',
-    projectType: raw['Project Type'] || '',
-    category: raw['Category'] || '',
-    domain: raw['Domain'] || '',
-    coreEngine: raw['Core Engine'] || '',
-    hardwareSensors: raw['Hardware & Sensors'] || '',
-    programmingLanguages: raw['Programming Languages & Frameworks'] || '',
-    artistCollaborator: raw['Artist/Collaborator'] || '',
-    role: raw['Role'] || '',
-    roleCN: raw['RoleCN'] || '',
-    timeline: raw['Timeline'] || '',
-    company: raw['Company'] || '',
-    overview: raw['Overview'] || '',
-    overviewCN: raw['OverviewCN'] || '',
-    achievements: raw['Achievements'] || '',
-    techDetails: raw['TechDetails'] || '',
-    technologies: raw['Technologies'] || '',
-    exhibition: raw['Exhibition'] || '',
-    publication: raw['Publication'] || '',
-    cover: raw['Cover'] || '',
-  };
-}
-
-function headersFromLine(line: string): string[] {
-  const headers: string[] = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      headers.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  headers.push(current.trim());
-  return headers;
-}
-
-function parseCSVLine(line: string): string[] {
-  const values: string[] = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      values.push(current);
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  values.push(current);
-  return values;
-}
+import { getCollection, getEntry } from 'astro:content';
+import { loadAllProjects, getProjectPublications } from '../../lib/csv';
+import { getProjectMedia } from '../../lib/media';
 
 export async function getStaticPaths() {
-  const csvPath = resolve('./src/data/projects-master.csv');
-  const csvContentForPaths = readFileSync(csvPath, 'utf-8');
-  const projectSlugs = csvContentForPaths
-    .trim()
-    .split('\n')
-    .slice(1)
-    .map((line) => line.split(',')[0]?.trim().replace(/^"|"$/g, ''))
-    .filter(Boolean);
-  return projectSlugs.map((projectSlug) => ({
-    params: { slug: projectSlug }
-  }));
+  const entries = await getCollection('projects');
+  return entries.map((entry) => ({ params: { slug: entry.slug } }));
 }
-
-// Load projects from master CSV
-const csvPath = resolve('./src/data/projects-master.csv');
-const csvContent = readFileSync(csvPath, 'utf-8');
-const allProjectsRaw = parseMasterCSV(csvContent);
-const allProjects: Record<string, Project> = Object.fromEntries(
-  Object.entries(allProjectsRaw).map(([projectSlug, rawProject]) => [
-    projectSlug,
-    normalizeProject(rawProject)
-  ])
-);
 
 const { slug } = Astro.params;
-const project = slug ? allProjects[slug] : null;
 
-// Helper functions
-function splitByPipe(str: string): string[] {
-  if (!str) return [];
-  return str.split('|').map(s => s.trim()).filter(s => s);
-}
+// Load from content collection (the rich markdown content)
+const projectEntry = slug ? await getEntry('projects', slug) : undefined;
 
-function getCoverUrl(project: Project): string {
-  if (project.cover && project.cover.trim()) {
-    return `/images/projects/${project.slug}/${project.cover}`;
-  }
-  return `/images/projects/${project.slug}/cover.png`;
-}
-
-// 404 if project not found
-if (!project) {
+// 404 if no MD entry exists for this slug
+if (!projectEntry) {
   return Astro.redirect('/projects');
 }
 
-// Parse publications CSV
-interface Publication {
-  id: string;
-  title: string;
-  venue: string;
-  year: string;
-  url: string;
+const { Content } = await projectEntry.render();
+const mdData = projectEntry.data;
+
+// Load CSV metadata for structured fields
+const allProjects = loadAllProjects();
+const csvProject = slug ? allProjects[slug] : null;
+
+// Build media gallery from the project's image folder
+const mediaGallery = getProjectMedia(slug!, mdData.cover || csvProject?.cover, { mode: 'natural', max: 999, excludeCover: true });
+
+// Technologies: MD frontmatter is authoritative, CSV as fallback
+const allTechnologies = mdData.technologies.length > 0
+  ? mdData.technologies
+  : csvProject
+    ? [
+        ...(csvProject.coreEngine ? csvProject.coreEngine.split(',').map((s) => s.trim()) : []),
+        ...(csvProject.programmingLanguages ? csvProject.programmingLanguages.split(',').map((s) => s.trim()) : []),
+        ...(csvProject.technologies ? csvProject.technologies.split('|').map((s) => s.trim()) : []),
+      ].filter(Boolean)
+    : [];
+
+// Publications
+const projectPublications = csvProject ? getProjectPublications(csvProject) : [];
+
+// Display values — MD frontmatter takes precedence, CSV as fallback
+const displayTitle = mdData.title || csvProject?.projectNameEN || '';
+const displayTitleCN = mdData.titleCN || csvProject?.projectName || '';
+const displayRole = mdData.role || csvProject?.role || '';
+const displayRoleCN = mdData.roleCN || csvProject?.roleCN || '';
+
+// Tags: MD frontmatter is authoritative, CSV as fallback
+const tagSet = new Set<string>();
+const addTag = (t: string) => { if (t) tagSet.add(t); };
+
+const hasMdTags = mdData.category || mdData.projectType;
+if (hasMdTags) {
+  if (mdData.category) addTag(mdData.category);
+  if (mdData.domain) mdData.domain.split(',').map((s) => s.trim()).filter(Boolean).forEach(addTag);
+  if (mdData.projectType) addTag(mdData.projectType);
+} else if (csvProject) {
+  if (csvProject.category) addTag(csvProject.category);
+  if (csvProject.domain) csvProject.domain.split(',').map((s) => s.trim()).filter(Boolean).forEach(addTag);
+  if (csvProject.projectType) addTag(csvProject.projectType);
 }
 
-function parsePublicationsCSV(csvText: string): Record<string, Publication> {
-  const lines = csvText.trim().split('\n');
-  if (lines.length < 2) return {};
+const tags = [...tagSet];
 
-  const headers = headersFromLine(lines[0]);
-  const pubs: Record<string, Publication> = {};
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.trim()) continue;
-
-    const values = parseCSVLine(line);
-    if (values.length < headers.length) continue;
-
-    const pub: Record<string, string> = {};
-    headers.forEach((header, index) => {
-      pub[header] = values[index] || '';
-    });
-
-    if (pub['id']) {
-      pubs[pub['id']] = {
-        id: pub['id'],
-        title: pub['title'],
-        venue: pub['venue'],
-        year: pub['year'],
-        url: pub['url'],
-      };
-    }
-  }
-
-  return pubs;
-}
-
-const pubsPath = resolve('./src/data/publications.csv');
-const pubsContent = readFileSync(pubsPath, 'utf-8');
-const allPublications = parsePublicationsCSV(pubsContent);
-
-const projectPublications: Publication[] = [];
-if (project.publication && project.publication.trim()) {
-  const pubIds = project.publication.split(',').map(s => s.trim()).filter(Boolean);
-  for (const id of pubIds) {
-    if (allPublications[id]) {
-      projectPublications.push(allPublications[id]);
-    }
-  }
-}
+// Cover URL
+const coverFilename = mdData.cover || csvProject?.cover || 'cover.png';
+const coverUrl = `/images/projects/${slug}/${encodeURIComponent(coverFilename)}?v=20260726-3`;
 ---
 
-<BaseLayout title={`${project.projectNameEN} | XU CHUYAN`}>
-  <div class="mesh-background"></div>
-
+<BaseLayout title={`${displayTitle} | XU CHUYAN`}>
   <div class="container">
-    <!-- Project Title -->
+
+    <!-- Project Hero -->
     <section class="project-hero">
-      <h1 class="display-text project-title" data-en={project.projectNameEN} data-cn={project.projectName}>
-        {project.projectNameEN}
+      <h1 class="display-text project-title" data-en={displayTitle} data-cn={displayTitleCN || displayTitle}>
+        {displayTitle}
       </h1>
+      {mdData.tagline && (
+        <p class="project-tagline data-text">{mdData.tagline}</p>
+      )}
+      {mdData.year && (
+        <span class="project-year-label data-text">{mdData.year}{displayRole ? ` — ${displayRole}` : ''}</span>
+      )}
+    </section>
+
+    <!-- Cover Image -->
+    <section class="project-cover">
+      <img src={coverUrl} alt={displayTitle} />
     </section>
 
     <!-- Tags -->
-    {project.category || project.domain || project.projectType ? (
+    {tags.length > 0 && (
       <section class="tags-section data-text">
         <div class="tags-row">
-          {project.category && project.category.split(',').map(tag => tag.trim()).filter(Boolean).map((tag) => (
+          {tags.map((tag) => (
             <span class="project-tag">{tag}</span>
           ))}
-          {project.domain && project.domain.split(',').map(tag => tag.trim()).filter(Boolean).map((tag) => (
-            <span class="project-tag">{tag}</span>
-          ))}
-          {project.projectType && <span class="project-tag">{project.projectType}</span>}
         </div>
       </section>
-    ) : null}
+    )}
 
-    <!-- Overview -->
-    {project.overview || project.overviewCN ? (
+    <!-- Markdown Body -->
+    <section class="project-section">
+      <div class="project-body">
+        <Content />
+      </div>
+    </section>
+
+    <!-- Media Gallery -->
+    {mediaGallery.length > 0 && (
       <section class="project-section">
         <div class="section-header data-text">
-          <span data-en="Overview" data-cn="概述">Overview</span>
+          <span data-en="Gallery" data-cn="媒体库">Gallery</span>
+          <span>{mediaGallery.length} items</span>
         </div>
-        <p class="overview-text" data-en={project.overview} data-cn={project.overviewCN}>
-          {project.overview || project.overviewCN}
-        </p>
+        <div class="media-gallery">
+          {mediaGallery.map((media) => (
+            <figure class={`media-item shape-${media.shape}`} style={`--media-ratio: ${media.ratio}`}>
+              {media.type === 'video' ? (
+                <video autoplay muted loop playsinline preload="metadata">
+                  <source src={media.src} />
+                </video>
+              ) : (
+                <img src={media.src} alt="" loading="lazy" />
+              )}
+            </figure>
+          ))}
+        </div>
       </section>
-    ) : null}
+    )}
 
     <!-- Technologies -->
-    {project.technologies || project.coreEngine || project.programmingLanguages ? (
+    {allTechnologies.length > 0 && (
       <section class="project-section">
         <div class="section-header data-text">
           <span data-en="Technologies used" data-cn="使用技术">Technologies used</span>
-          {(() => {
-            const allTechs = [
-              ...(project.coreEngine ? project.coreEngine.split(',').map(s => s.trim()) : []),
-              ...(project.programmingLanguages ? project.programmingLanguages.split(',').map(s => s.trim()) : []),
-              ...(project.technologies ? project.technologies.split('|').map(s => s.trim()) : [])
-            ].filter(Boolean);
-            return <span>{allTechs.length} tools</span>;
-          })()}
+          <span>{allTechnologies.length} tools</span>
         </div>
         <div class="tech-tags-row">
-          {project.coreEngine && project.coreEngine.split(',').map(s => s.trim()).filter(Boolean).map((tech) => (
-            <span class="tech-tag">{tech}</span>
-          ))}
-          {project.programmingLanguages && project.programmingLanguages.split(',').map(s => s.trim()).filter(Boolean).map((tech) => (
-            <span class="tech-tag">{tech}</span>
-          ))}
-          {project.technologies && project.technologies.split('|').map(s => s.trim()).filter(Boolean).map((tech) => (
+          {allTechnologies.map((tech) => (
             <span class="tech-tag">{tech}</span>
           ))}
         </div>
       </section>
-    ) : null}
+    )}
+
+    <!-- Exhibition -->
+    {(mdData.exhibition || csvProject?.exhibition) && (
+      <section class="project-section">
+        <div class="section-header data-text">
+          <span data-en="Exhibition" data-cn="展览">Exhibition</span>
+        </div>
+        <p class="overview-text">{mdData.exhibition || csvProject?.exhibition}</p>
+      </section>
+    )}
+
+    <!-- Demo / Online Link -->
+    {mdData.demoUrl && (
+      <section class="project-section">
+        <div class="section-header data-text">
+          <span data-en="Online" data-cn="在线地址">Online</span>
+        </div>
+        <a href={mdData.demoUrl} target="_blank" rel="noopener noreferrer" class="demo-link data-text">
+          {mdData.demoUrl}
+        </a>
+      </section>
+    )}
+
+    <!-- Awards -->
+    {mdData.awards && (
+      <section class="project-section">
+        <div class="section-header data-text">
+          <span data-en="Awards" data-cn="获奖">Awards</span>
+        </div>
+        <p class="overview-text">{mdData.awards}</p>
+      </section>
+    )}
 
     <!-- Publication -->
-    {projectPublications.length > 0 ? (
+    {projectPublications.length > 0 && (
       <section class="project-section">
         <div class="section-header data-text">
           <span data-en="Publication" data-cn="发表">Publication</span>
@@ -325,68 +202,12 @@ if (project.publication && project.publication.trim()) {
           ))}
         </div>
       </section>
-    ) : null}
+    )}
 
-    <!-- Contact CTA -->
-    <section class="contact-cta">
-      <h2 class="cta-title" data-en="Interested in this project?" data-cn="对此项目感兴趣？">Interested in this project?</h2>
-      <a href="mailto:milkteaonthebeat@gmail.com" class="cta-button data-text">
-        <span data-en="Get in touch" data-cn="联系我">Get in touch</span>
-      </a>
-    </section>
-  </div>
-
-  <!-- Sticker Badge -->
-  <div class="sticker-badge">
-    <div class="sticker-icon">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="2" y1="12" x2="22" y2="12"></line>
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-      </svg>
-    </div>
-    <div class="sticker-text">
-      XU CHUYAN STUDIO<br>
-      {project.projectNameEN.toUpperCase()}<br>
-      SECURE CONNECTION
-    </div>
   </div>
 </BaseLayout>
 
 <style>
-  :root {
-    --black: #050505;
-    --bg-mesh-1: #c4b5fd;
-    --bg-mesh-2: #99f6e4;
-    --bg-mesh-3: #fef3c7;
-    --bg-mesh-4: #fecaca;
-  }
-
-  .mesh-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1;
-    background:
-      radial-gradient(at 0% 0%, var(--bg-mesh-1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, var(--bg-mesh-2) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, var(--bg-mesh-4) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, var(--bg-mesh-3) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, #fff 0px, transparent 50%);
-    background-size: 150% 150%;
-    filter: blur(80px);
-    animation: gradient-shift 20s ease infinite alternate;
-    opacity: 0.9;
-  }
-
-  @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 50% 100%; }
-  }
-
   .data-text {
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -411,52 +232,41 @@ if (project.publication && project.publication.trim()) {
     margin: 0 auto;
   }
 
-  /* Project Header */
-  .project-header {
-    padding-top: 80px;
-  }
-
-  .manifest-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--black);
-  }
-
-  .manifest-row.top-border {
-    border-top: 1px solid var(--black);
-  }
-
-  .manifest-item {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .manifest-label {
-    opacity: 0.5;
-    margin-bottom: 4px;
-  }
-
-  .back-link {
-    color: var(--black);
-    text-decoration: none;
-    transition: opacity 0.2s ease;
-  }
-
-  .back-link:hover {
-    opacity: 0.5;
-  }
-
   /* Project Hero */
   .project-hero {
-    padding: 80px 0;
-    border-bottom: 1px solid var(--black);
+    padding: 66px 0 18px;
+    background: transparent;
+    border: 0;
+  }
+
+  .project-tagline {
+    margin-top: 8px;
+    color: var(--muted);
+    text-transform: none;
+    font-size: 0.85rem;
+  }
+
+  .project-year-label {
+    display: inline-block;
+    margin-top: 6px;
+    color: var(--muted);
+    text-transform: none;
+  }
+
+  /* Cover Image */
+  .project-cover {
+    margin: 24px 0 48px;
+  }
+
+  .project-cover img {
+    width: 100%;
+    display: block;
   }
 
   /* Tags Section */
   .tags-section {
     padding: 24px 0;
-    border-bottom: 1px solid var(--black);
+    border-bottom: 1px solid var(--line);
   }
 
   .tags-row {
@@ -467,7 +277,7 @@ if (project.publication && project.publication.trim()) {
 
   .project-tag {
     padding: 6px 12px;
-    background: var(--black);
+    background: var(--ink);
     color: white;
     font-size: 0.7rem;
     font-weight: 600;
@@ -478,7 +288,7 @@ if (project.publication && project.publication.trim()) {
   /* Project Sections */
   .project-section {
     padding: 40px 0;
-    border-bottom: 1px solid rgba(5, 5, 5, 0.2);
+    border-bottom: 1px solid var(--line);
   }
 
   .section-header {
@@ -493,6 +303,88 @@ if (project.publication && project.publication.trim()) {
     max-width: 900px;
   }
 
+  /* Markdown Body */
+  .project-body {
+    max-width: 62ch;
+    font-size: clamp(1rem, 1.1vw, 1.1rem);
+    line-height: 1.65;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  .project-body :global(h2) {
+    margin: 48px 0 12px;
+    font-size: 1.2rem;
+    font-weight: 650;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  .project-body :global(h3) {
+    margin: 32px 0 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  .project-body :global(p) {
+    margin: 0 0 18px;
+  }
+
+  .project-body :global(img) {
+    width: 100%;
+    display: block;
+    margin: 32px 0;
+  }
+
+  .project-body :global(a) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .project-body :global(ul),
+  .project-body :global(ol) {
+    margin: 0 0 18px 20px;
+    line-height: 1.65;
+  }
+
+  .project-body :global(li) {
+    margin-bottom: 6px;
+  }
+
+  .project-body :global(blockquote) {
+    margin: 24px 0;
+    padding-left: 16px;
+    border-left: 2px solid var(--ink);
+    opacity: 0.8;
+  }
+
+  /* Media Gallery — 2 columns, natural ratio */
+  .media-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .media-gallery:has(.media-item:only-child) {
+    grid-template-columns: 1fr;
+  }
+
+  .media-item {
+    margin: 0;
+    background: #efefed;
+  }
+
+  .media-item img,
+  .media-item video {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    display: block;
+  }
+
   /* Publications */
   .publications-list {
     display: flex;
@@ -505,7 +397,7 @@ if (project.publication && project.publication.trim()) {
     grid-template-columns: 80px 1fr 200px;
     gap: 24px;
     padding: 16px 0;
-    border-bottom: 1px solid rgba(5, 5, 5, 0.15);
+    border-bottom: 1px solid var(--line);
   }
 
   .pub-year {
@@ -517,7 +409,7 @@ if (project.publication && project.publication.trim()) {
   }
 
   .pub-title a {
-    color: var(--black);
+    color: var(--ink);
     text-decoration: underline;
   }
 
@@ -525,6 +417,14 @@ if (project.publication && project.publication.trim()) {
     opacity: 0.6;
     font-style: italic;
     text-align: right;
+  }
+
+  .demo-link {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-transform: none;
+    font-size: 0.85rem;
   }
 
   /* Tech Tags */
@@ -536,7 +436,7 @@ if (project.publication && project.publication.trim()) {
 
   .tech-tag {
     padding: 6px 12px;
-    border: 1px solid var(--black);
+    border: 1px solid var(--ink);
     font-size: 0.7rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -545,85 +445,12 @@ if (project.publication && project.publication.trim()) {
   }
 
   .tech-tag:hover {
-    background: var(--black);
+    background: var(--ink);
     color: white;
-  }
-
-  /* Contact CTA */
-  .contact-cta {
-    padding: 80px 0 100px;
-    text-align: center;
-  }
-
-  .cta-title {
-    font-size: clamp(1.5rem, 5vw, 3rem);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: -0.03em;
-    margin-bottom: 32px;
-  }
-
-  .cta-button {
-    display: inline-flex;
-    padding: 16px 32px;
-    background: var(--black);
-    color: white;
-    text-decoration: none;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: all 0.2s ease;
-  }
-
-  .cta-button:hover {
-    transform: scale(1.05);
-  }
-
-  /* Sticker Badge */
-  .sticker-badge {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: var(--black);
-    color: white;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    z-index: 100;
-    transform: rotate(-2deg);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-  }
-
-  .sticker-badge:hover {
-    transform: rotate(0deg) scale(1.05);
-  }
-
-  .sticker-icon {
-    width: 24px;
-    height: 24px;
-    border: 1px solid white;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-  }
-
-  .sticker-text {
-    font-family: inherit;
-    font-size: 0.65rem;
-    line-height: 1.3;
-    text-align: left;
   }
 
   /* Responsive */
   @media (max-width: 1024px) {
-    .manifest-row {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
     .publication-row {
       grid-template-columns: 1fr;
       gap: 8px;
@@ -639,33 +466,20 @@ if (project.publication && project.publication.trim()) {
       font-size: 14vw;
     }
 
-    .project-header {
-      padding-top: 60px;
-    }
-
     .project-hero {
-      padding: 40px 0;
+      padding: 40px 0 12px;
     }
 
     .project-section {
       padding: 30px 0;
     }
 
-    .contact-cta {
-      padding: 60px 0;
+    .project-cover {
+      margin: 16px 0 32px;
     }
 
-    .manifest-row {
-      gap: 16px;
-    }
-
-    .sticker-badge {
-      bottom: 20px;
-      right: 20px;
+    .media-gallery {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 </style>
-
-<script>
-  // Language toggle functionality inherited from BaseLayout
-</script>

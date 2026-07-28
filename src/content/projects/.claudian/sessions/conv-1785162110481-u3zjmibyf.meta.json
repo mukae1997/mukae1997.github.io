@@ -1,0 +1,24 @@
+{
+  "id": "conv-1785162110481-u3zjmibyf",
+  "providerId": "claude",
+  "title": "Add Chinese counterpart paragraph",
+  "titleGenerationStatus": "success",
+  "createdAt": 1785162110483,
+  "updatedAt": 1785245637555,
+  "lastResponseAt": 1785245637555,
+  "sessionId": "82580c26-4d8b-4628-870e-2420f5cea60d",
+  "selectedModel": "haiku",
+  "providerState": {
+    "providerSessionId": "82580c26-4d8b-4628-870e-2420f5cea60d"
+  },
+  "usage": {
+    "model": "haiku",
+    "inputTokens": 21881,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 37888,
+    "contextWindow": 200000,
+    "contextWindowIsAuthoritative": true,
+    "contextTokens": 59769,
+    "percentage": 30
+  }
+}

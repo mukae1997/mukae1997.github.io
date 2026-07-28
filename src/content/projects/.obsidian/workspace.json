@@ -1,0 +1,220 @@
+{
+  "main": {
+    "id": "c4997f430109bc13",
+    "type": "split",
+    "children": [
+      {
+        "id": "b7f5345244b720e5",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6366596187e06ed2",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "autumn-wind-nanyuan.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "autumn-wind-nanyuan"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a75032921a2f1895",
+    "type": "split",
+    "children": [
+      {
+        "id": "e212646554ee9faa",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "505acf604bc7e091",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "f18b6bb7961e5658",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "ba5e40b2684488ab",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "5f7ee2be8c5dbbdf",
+    "type": "split",
+    "children": [
+      {
+        "id": "c12da21e7f4f1078",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b47be65be3d3ff44",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "dayin-heming.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "dayin-heming 的反向链接列表"
+            }
+          },
+          {
+            "id": "ea50a7102eb67f76",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "dayin-heming.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "dayin-heming 的出链列表"
+            }
+          },
+          {
+            "id": "cc122aaaa6fa235a",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "04ef4d540e1e13c8",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "a23145b40c00e70e",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "dayin-heming.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "dayin-heming 的大纲"
+            }
+          },
+          {
+            "id": "4427317dc85aa262",
+            "type": "leaf",
+            "state": {
+              "type": "claudian-view",
+              "state": {},
+              "icon": "bot",
+              "title": "Claudian"
+            }
+          }
+        ],
+        "currentTab": 5
+      }
+    ],
+    "direction": "horizontal",
+    "width": 396.5
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false,
+      "realclaudian:Open Claudian": false
+    }
+  },
+  "active": "6366596187e06ed2",
+  "lastOpenFiles": [
+    "1001-nights.md",
+    "1001-nights.md.tmp.27260.e3cf99204963",
+    "swords-west-river.md",
+    "hyborg-agency.md",
+    "vj-project.md",
+    "ai-nushu.md",
+    "autumn-wind-nanyuan.md",
+    "dance-shadows.md",
+    "echuu.md",
+    "humans-space-time.md",
+    "dayin-heming.md",
+    "vj-project.md.tmp.3100.9c41e6937af9",
+    "swords-west-river.md.tmp.3100.fc113f8fd83a",
+    "humans-space-time.md.tmp.3100.24b8d44e180e",
+    "autumn-wind-nanyuan.md.tmp.3100.258bd1af479a",
+    "dance-shadows.md.tmp.50140.818884f2ed96",
+    "dayin-heming.md.tmp.45628.d4fe0ae75c13",
+    "dayin-heming.md.tmp.45628.2949add735b1",
+    "dayin-heming.md.tmp.50140.1f97a8d27650",
+    "dayin-heming.md.tmp.50140.9a517e281c8e"
+  ]
+}

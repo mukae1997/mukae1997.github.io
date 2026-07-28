@@ -1,135 +1,22 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { loadAllProjects, loadAllPublications } from '../lib/csv';
+import { getProjectMedia } from '../lib/media';
+import { getCollection } from 'astro:content';
 
-function parseCsv(csvText: string): Record<string, string>[] {
-  const lines = csvText.trim().split('\n').filter(Boolean);
-  const parseLine = (line: string) => {
-    const values: string[] = [];
-    let value = '';
-    let inQuotes = false;
+const allProjects = loadAllProjects();
+const allPubs = loadAllPublications();
 
-    for (const character of line) {
-      if (character === '"') {
-        inQuotes = !inQuotes;
-      } else if (character === ',' && !inQuotes) {
-        values.push(value.trim());
-        value = '';
-      } else {
-        value += character;
-      }
-    }
+const projectEntries = await getCollection('projects');
+const mdSlugs = new Set(projectEntries.map((e) => e.slug));
 
-    values.push(value.trim());
-    return values;
-  };
-
-  const headers = parseLine(lines[0]);
-  return lines.slice(1).map((line) => {
-    const values = parseLine(line);
-    return Object.fromEntries(headers.map((header, index) => [header, values[index] || '']));
-  });
-}
-
-const projectData = parseCsv(readFileSync(resolve('./src/data/projects-master.csv'), 'utf-8'));
-const publicationData = parseCsv(readFileSync(resolve('./src/data/publications.csv'), 'utf-8'));
-const imageExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif']);
-const videoExtensions = new Set(['.mp4', '.webm', '.mov', '.m4v']);
-
-function getImageRatio(filePath: string) {
-  const bytes = readFileSync(filePath);
-
-  // PNG
-  if (bytes.subarray(1, 4).toString() === 'PNG') {
-    return bytes.readUInt32BE(16) / bytes.readUInt32BE(20);
-  }
-
-  // GIF
-  if (bytes.subarray(0, 3).toString() === 'GIF') {
-    return bytes.readUInt16LE(6) / bytes.readUInt16LE(8);
-  }
-
-  // JPEG
-  if (bytes[0] === 0xff && bytes[1] === 0xd8) {
-    let offset = 2;
-    while (offset < bytes.length - 9) {
-      if (bytes[offset] !== 0xff) {
-        offset += 1;
-        continue;
-      }
-      const marker = bytes[offset + 1];
-      const length = bytes.readUInt16BE(offset + 2);
-      if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
-        return bytes.readUInt16BE(offset + 7) / bytes.readUInt16BE(offset + 5);
-      }
-      offset += 2 + length;
-    }
-  }
-
-  // Unknown formats keep a neutral tile rather than failing the page build.
-  return 1;
-}
-
-function getMediaShape(ratio: number) {
-  if (ratio > 1.25) return 'wide';
-  if (ratio < 0.8) return 'tall';
-  return 'square';
-}
-
-function stableNumber(value: string) {
-  return [...value].reduce((total, character) => ((total * 31) + character.charCodeAt(0)) >>> 0, 0);
-}
-
-function getProjectMedia(project: Record<string, string>) {
-  const slug = project.slug;
-  const folder = resolve('./public/images/projects', slug);
-  const cover = project.Cover || 'cover.png';
-
-  if (!slug || !existsSync(folder)) return [];
-
-  const files = readdirSync(folder)
-    .filter((file) => {
-      const extension = file.slice(file.lastIndexOf('.')).toLowerCase();
-      return imageExtensions.has(extension) || videoExtensions.has(extension);
-    })
-    .sort((a, b) => a.localeCompare(b));
-  const orderedFiles = [cover, ...files.filter((file) => file !== cover)];
-
-  const availableFiles = [...new Set(orderedFiles)]
-    .filter((file) => existsSync(resolve(folder, file)))
-    .slice(0, 4);
-  if (availableFiles.length === 0) return [];
-
-  const seed = stableNumber(slug);
-  const squareIndexes = new Set([seed % availableFiles.length]);
-
-  // Four-piece galleries get a second square tile; the choice stays stable per project.
-  if (availableFiles.length >= 4) squareIndexes.add((seed + 2) % availableFiles.length);
-
-  return availableFiles
-    .map((file, index) => {
-      const extension = file.slice(file.lastIndexOf('.')).toLowerCase();
-      const isVideo = videoExtensions.has(extension);
-      const sourceRatio = isVideo ? 16 / 9 : getImageRatio(resolve(folder, file));
-      const ratio = squareIndexes.has(index) ? 1 : sourceRatio;
-      return {
-        type: isVideo ? 'video' : 'image',
-        // Keep deployment updates from reusing a browser-cached missing asset.
-        src: `/images/projects/${slug}/${encodeURIComponent(file)}?v=20260726-3`,
-        ratio: Math.max(0.4, Math.min(2.5, ratio)).toFixed(3),
-        shape: getMediaShape(ratio),
-      };
-    });
-}
-
-const featuredProjects = projectData
-  .filter((project) => ['true', '1', 'TRUE'].includes(project.Display) && ['true', '1', 'TRUE'].includes(project.Featured))
-  .map((project) => ({ ...project, media: getProjectMedia(project) }))
-  .filter((project) => project.media.length > 0)
+const featuredProjects = Object.values(allProjects)
+  .filter((p) => ['true', '1', 'TRUE'].includes(p.display) && ['true', '1', 'TRUE'].includes(p.featured))
+  .map((p) => ({ ...p, media: getProjectMedia(p.slug, p.cover, { source: 'home' }) }))
+  .filter((p) => p.media.length > 0)
   .sort((a, b) => Number(b.year || 0) - Number(a.year || 0));
 
-const publications = publicationData.slice(0, 3);
+const publications = Object.values(allPubs).slice(0, 3);
 ---
 
 <BaseLayout title="XU CHUYAN | Creative Technologist" hideNav>
@@ -156,11 +43,12 @@ const publications = publicationData.slice(0, 3);
 
       <div class="work-list">
         {featuredProjects.map((project, index) => {
-          const name = project['Project Name EN'] || project['Project Name'];
-          const category = project.Category || project['Project Type'] || 'Interactive Experience';
-          const role = project.Role || 'Creative Technologist';
+          const name = project.projectNameEN || project.projectName;
+          const category = project.category || project.projectType || 'Interactive Experience';
+          const role = project.role || 'Creative Technologist';
 
-          return (
+          const hasDetail = mdSlugs.has(project.slug);
+          const featureContent = (
             <article class="project-feature">
               <div class="project-heading">
                 <span class="project-index">{String(index + 1).padStart(2, '0')}</span>
@@ -190,6 +78,13 @@ const publications = publicationData.slice(0, 3);
               </div>
             </article>
           );
+          return hasDetail ? (
+            <a href={`/projects/${project.slug}`} class="project-feature-link">
+              {featureContent}
+            </a>
+          ) : (
+            featureContent
+          );
         })}
       </div>
 
@@ -203,11 +98,11 @@ const publications = publicationData.slice(0, 3);
           <a href="/research">View all ↗</a>
         </div>
         <div class="publication-list">
-          {publications.map((publication) => (
-            <a class="publication" href={publication.url} target="_blank" rel="noreferrer">
-              <span>{publication.year}</span>
-              <em class="publication-title">{publication.title}</em>
-              <span>{publication.venue}</span>
+          {publications.map((pub) => (
+            <a class="publication" href={pub.url} target="_blank" rel="noreferrer">
+              <span>{pub.year}</span>
+              <em class="publication-title">{pub.title}</em>
+              <span>{pub.venue}</span>
             </a>
           ))}
         </div>
@@ -302,6 +197,11 @@ const publications = publicationData.slice(0, 3);
   .section-label h2 { font: inherit; }
   .section-label a { color: inherit; text-decoration: none; }
 
+  .project-feature-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
   .project-feature { padding: 12px 0 56px; }
 
   .project-heading {
@@ -342,7 +242,7 @@ const publications = publicationData.slice(0, 3);
     color: inherit;
   }
 
-  .project-media { overflow: hidden; background: #efefed; }
+  .project-media { overflow: hidden; background: #efefed; max-height: 300px; }
   .project-media img,
   .project-media video { width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2,.8,.2,1); }
   .project-gallery:hover img,
@@ -518,9 +418,8 @@ const publications = publicationData.slice(0, 3);
   .media-2,
   .media-3,
   .media-4 {
-    grid-column: span 3;
-    height: auto;
-    aspect-ratio: var(--media-ratio, 1);
+    grid-column: auto;
+    height: 300px;
     align-self: start;
   }
 

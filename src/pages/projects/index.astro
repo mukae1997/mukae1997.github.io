@@ -1,77 +1,24 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { getDisplayedProjects } from '../../lib/csv';
+import { getCollection } from 'astro:content';
 
-// CSV 解析函数 - 正确处理引号内的逗号
-function parseMasterCSV(csvText: string) {
-  const lines = csvText.trim().split('\n');
-  const headers: string[] = [];
+const allProjects = getDisplayedProjects();
 
-  // 解析表头
-  let current = '';
-  let inQuotes = false;
-  for (let j = 0; j < lines[0].length; j++) {
-    const char = lines[0][j];
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      headers.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  headers.push(current.trim());
-
-  const projects = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.trim()) continue;
-
-    const values: string[] = [];
-    current = '';
-    inQuotes = false;
-
-    for (let j = 0; j < line.length; j++) {
-      const char = line[j];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    values.push(current.trim());
-
-    const project: any = {};
-    headers.forEach((header, index) => {
-      project[header] = values[index] || '';
-    });
-
-    projects.push(project);
-  }
-
-  return projects;
-}
-
-const masterCsvPath = resolve('./src/data/projects-master.csv');
-const masterCsvContent = readFileSync(masterCsvPath, 'utf-8');
-const allProjects = parseMasterCSV(masterCsvContent);
-
-const displayedProjects = allProjects.filter(project => {
-  const display = project['Display'];
-  return display === 'true' || display === '1' || display === 'TRUE';
-});
-
-const sortedProjects = displayedProjects.sort((a, b) => {
-  const yearA = parseInt(a['year']) || 0;
-  const yearB = parseInt(b['year']) || 0;
+const sortedProjects = allProjects.sort((a, b) => {
+  const yearA = parseInt(a.year) || 0;
+  const yearB = parseInt(b.year) || 0;
   return yearB - yearA;
 });
+
+// Projects that have a content collection entry (rich detail pages)
+const projectEntries = await getCollection('projects');
+const mdSlugs = new Set(projectEntries.map((entry) => entry.slug));
+const mdCoverMap = Object.fromEntries(
+  projectEntries.map((e) => [e.slug, e.data.cover]),
+);
 
 const englishProjectNames: Record<string, string> = {
   'vj-project': 'The Either Tour — End Poem VJ',
@@ -87,13 +34,15 @@ const englishProjectNames: Record<string, string> = {
   'dance-shadows': 'Dance Shadows',
   'autumn-wind-nanyuan': 'Autumn Wind in Nanyuan',
   'journey-immortals': 'Journey to Immortals',
-  '1001-nights': '1001 Nights (Commercial)',
+  '1001-nights': '1001 Nights',
+  'dayin-heming': 'Dayin Heming',
 };
 
 const projectFeaturing: Record<string, string> = {
   '1001-nights': 'AI-native narrative game with an LLM content pipeline',
-  'echuu': 'Web-based AI VTuber platform for character streaming',
+  'echuu': 'Turn 3D avatars into livestream-ready AI VTubers',
   'xixi': 'AI companion campaign with a voice-to-character flow',
+  'dayin-heming': 'Immersive music-themed exhibition with AI-produced interactive installations',
   'hyborg-agency': 'Multi-agent public experience for collective worldbuilding',
   'ai-nushu': 'Interactive AI revival of Nüshu',
   'ai-map': 'Interactive AI knowledge visualization',
@@ -101,13 +50,13 @@ const projectFeaturing: Record<string, string> = {
   'vj-project': 'Touring live visuals powered by a real-time generative engine',
   'journey-immortals': 'Location-based interaction environment',
   'parallel': 'Audiovisual worldbuilding performance',
-  'humans-space-time': 'Immersive exhibition interaction system',
-  'dance-shadows': 'Participatory performance with motion-responsive visuals',
-  'autumn-wind-nanyuan': 'Real-time performance visual system',
+  'humans-space-time': 'Interactive digital installation at Beijing Contemporary Art Expo',
+  'dance-shadows': 'Interactive performance at Infocomm 2021 with BlackTrax motion capture',
+  'autumn-wind-nanyuan': 'Multimedia interactive dance drama for China National Song and Dance Theater',
   'quancheng-memory': 'Interactive city-memory experience',
   'music-realm': 'Immersive musical interaction world',
   'mother-gyro': 'Kinetic sculpture interaction system',
-  'swords-west-river': 'Spatial performance interaction system',
+  'swords-west-river': 'Real-time interactive performance at the National Grand Theatre',
   'tianmu-dream': 'Generative mythic landscape experience',
 };
 
@@ -121,7 +70,7 @@ const portfolioGroups = [
 const projectGroups = portfolioGroups.map(({ value, label }) => ({
   value,
   label,
-  projects: sortedProjects.filter((project) => project['Portfolio Category'] === value),
+  projects: sortedProjects.filter((project) => project.portfolioCategory === value),
 })).filter((group) => group.projects.length > 0);
 
 ---
@@ -146,20 +95,21 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
           </div>
           <div class="projects-list">
         {projects.map((project, index) => {
-          const year = project['year'];
-          const name = project['Project Name'];
-          const slug = project['slug'];
-          const nameEn = project['Project Name EN'] || englishProjectNames[slug] || name;
+          const year = project.year;
+          const name = project.projectName;
+          const slug = project.slug;
+          const nameEn = project.projectNameEN || englishProjectNames[slug] || name;
           const featuring = projectFeaturing[slug] || 'Interactive experience';
-          const domains = project['Domain']?.split(',').map((item) => item.trim()).filter(Boolean) || [];
+          const domains = project.domain?.split(',').map((item) => item.trim()).filter(Boolean) || [];
           const domainText = domains.join(' / ');
-          const cover = project['Cover'] || 'cover.png';
+          const hasDetailPage = mdSlugs.has(slug);
+          const cover = mdCoverMap[slug] || project.cover || 'cover.png';
           const coverPath = `/images/projects/${slug}/${encodeURIComponent(cover)}`;
           const coverUrl = `${coverPath}?v=20260726-3`;
           const hasCover = existsSync(resolve('./public', coverPath.slice(1)));
 
-          return (
-            <div class="project-row data-text">
+          const rowContent = (
+            <>
               <span class="project-num">{(index + 1).toString().padStart(2, '0')}</span>
               <div class="project-image-inline">
                 {hasCover ? (
@@ -170,10 +120,21 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
               </div>
               <span class="project-name">
                 <span class="project-name-en">{nameEn}</span>
+                {name && name !== nameEn && <span class="project-name-cn">{name}</span>}
                 {domainText && <span class="project-name-domain">{domainText}</span>}
               </span>
               <span class="project-featuring">{featuring}</span>
               <span class="project-year">({year})</span>
+            </>
+          );
+
+          return hasDetailPage ? (
+            <a href={`/projects/${slug}`} class="project-row data-text">
+              {rowContent}
+            </a>
+          ) : (
+            <div class="project-row project-row-disabled data-text">
+              {rowContent}
             </div>
           );
         })}
@@ -343,19 +304,9 @@ const projectGroups = portfolioGroups.map(({ value, label }) => ({
     grid-template-columns: 50px 180px 2fr 1.5fr 100px;
   }
 
-  /* Disabled state - detail page not available */
+  /* Disabled state — hover preview works, just no link */
   .project-row-disabled {
     opacity: 0.6;
-    cursor: not-allowed !important;
-    pointer-events: none;
-  }
-
-  .project-row-disabled .project-name {
-    opacity: 0.7;
-  }
-
-  .project-row-disabled .project-name-cn {
-    opacity: 0.5;
   }
 
   .project-image-inline {
